@@ -1,14 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
-  user: JSON.parse(localStorage.getItem('user')) || null, // Initialize user from local storage
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  user: JSON.parse(localStorage.getItem('user')) || null, 
+  status: 'idle', 
   error: null,
 };
 
-// Async thunk to sign up a new user
 export const signupUser  = createAsyncThunk('auth/signupUser ', async (userData) => {
-  // Fetch existing users to determine the highest id
   const usersResponse = await fetch('http://localhost:3000/users');
   if (!usersResponse.ok) {
     throw new Error('Failed to fetch users');
@@ -16,13 +14,10 @@ export const signupUser  = createAsyncThunk('auth/signupUser ', async (userData)
   
   const users = await usersResponse.json();
 
-  // Calculate the new id
   const newId = users.length > 0 ? Math.max(...users.map(user => parseInt(user.id))) + 1 : 1;
 
-  // Create the new user object with the new id
   const newUser  = { ...userData, id: newId };
 
-  // Send a POST request to the API to create a new user
   const response = await fetch('http://localhost:3000/users', {
     method: 'POST',
     headers: {
@@ -36,7 +31,7 @@ export const signupUser  = createAsyncThunk('auth/signupUser ', async (userData)
   }
 
   const data = await response.json();
-  return data; // Return the created user data
+  return data; 
 });
 
 const authSlice = createSlice({
@@ -45,11 +40,11 @@ const authSlice = createSlice({
   reducers: {
     login: (state, action) => {
       state.user = action.payload;
-      localStorage.setItem('user', JSON.stringify(action.payload)); // Save user to local storage
+      localStorage.setItem('user', JSON.stringify(action.payload)); 
     },
     logout: (state) => {
       state.user = null;
-      localStorage.removeItem('user'); // Remove user from local storage
+      localStorage.removeItem('user'); 
     },
   },
   extraReducers: (builder) => {
@@ -59,18 +54,16 @@ const authSlice = createSlice({
       })
       .addCase(signupUser .fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload; // Set the user state to the newly signed up user
-        localStorage.setItem('user', JSON.stringify(action.payload)); // Save user to local storage
+        state.user = action.payload; 
+        localStorage.setItem('user', JSON.stringify(action.payload)); 
       })
       .addCase(signupUser .rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message; // Handle error
+        state.error = action.error.message; 
       });
   },
 });
 
-// Export actions
 export const { login, logout } = authSlice.actions;
 
-// Default export of the reducer
 export default authSlice.reducer;

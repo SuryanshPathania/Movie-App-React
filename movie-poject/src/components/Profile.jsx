@@ -1,17 +1,17 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate instead of useHistory
+import { useNavigate } from 'react-router-dom'; 
 import { logout } from '../redux/authSlice';
 
 const Profile = () => {
   const user = useSelector((state) => state.auth.user);
-  const dispatch = useDispatch(); // Don't forget to use useDispatch
-  const navigate = useNavigate(); // Use useNavigate instead of useHistory
+  const dispatch = useDispatch(); 
+  const navigate = useNavigate(); 
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     dispatch(logout());
-    navigate('/login'); // Use navigate instead of history.push
+    navigate('/login'); 
   };
 
   return (

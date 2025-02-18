@@ -1,15 +1,4 @@
-/* Global Styles */
-/* body {
-  font-family: "Poppins", Arial, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-} */
 
-/* Login Form Container */
 .login-container {
   padding: 25px;
   border-radius: 10px;

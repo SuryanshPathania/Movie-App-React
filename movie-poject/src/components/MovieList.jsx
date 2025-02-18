@@ -15,9 +15,9 @@ const MovieList = () => {
   }, [movieStatus, dispatch]);
 
   const handleDelete = (id) => {
-    // Confirm deletion
+    
     if (window.confirm('Are you sure you want to delete this movie?')) {
-      dispatch(deleteMovie(id)); // Dispatch the deleteMovie action
+      dispatch(deleteMovie(id)); 
     }
   };
 
