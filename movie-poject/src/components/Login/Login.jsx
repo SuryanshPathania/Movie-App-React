@@ -4,26 +4,28 @@ import { useDispatch } from 'react-redux';
 import { login } from '../../redux/authSlice';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // const state = useSelector()
 
-  const handleLogin = (e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
     
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
-    
+    // const storedUsers = state.auth.user|| [];
+    const response =await axios.get('http://localhost:3000/users');
+    const storedUsers = response.data
     const matchedUser = storedUsers.find(user => 
       user.email === email && user.password === password
     );
 
     if (matchedUser) {
       dispatch(login(matchedUser));
-      // Store logged-in user in localStorage
-      localStorage.setItem('currentUser', JSON.stringify(matchedUser));
+      // localStorage.setItem('currentUser', JSON.stringify(matchedUser));
       navigate('/dashboard');
     } else {
       alert('Invalid email or password');

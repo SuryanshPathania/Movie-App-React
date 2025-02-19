@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-const initialState = {
-  user: JSON.parse(localStorage.getItem('user')) || null, 
-  status: 'idle', 
-  error: null,
-};
+// const initialState = {
+//   user: JSON.parse(localStorage.getItem('user')) || null, 
+//   status: 'idle', 
+//   error: null,
+// };
 
 export const signupUser  = createAsyncThunk('auth/signupUser ', async (userData) => {
   const usersResponse = await fetch('http://localhost:3000/users');
@@ -36,7 +36,10 @@ export const signupUser  = createAsyncThunk('auth/signupUser ', async (userData)
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState,
+  initialState:{
+    user: null,
+    status: 'idle',   
+  },
   reducers: {
     login: (state, action) => {
       state.user = action.payload;
@@ -44,7 +47,7 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       state.user = null;
-      localStorage.removeItem('user'); 
+      localStorage.clear(); 
     },
   },
   extraReducers: (builder) => {
@@ -55,7 +58,7 @@ const authSlice = createSlice({
       .addCase(signupUser .fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.user = action.payload; 
-        localStorage.setItem('user', JSON.stringify(action.payload)); 
+        // localStorage.setItem('user', JSON.stringify(action.payload)); 
       })
       .addCase(signupUser .rejected, (state, action) => {
         state.status = 'failed';

@@ -11,38 +11,41 @@ const Signup = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    const newUser = { firstName, lastName, email, password };
+    setError('');
 
     try {
-      const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
+      const { data: existingUsers } = await axios.get(
+        `http://localhost:3000/users?email=${email}`
+      );
 
-      if (existingUsers.some(user => user.email === email)) {
-        alert('Email already registered!');
-        return;
+      if (existingUsers.length > 0) {
+        throw new Error('Email already registered!');
       }
+    
+    const { data: allUsers } = await axios.get('http://localhost:3000/users');
+    const newId = allUsers.length > 0 
+      ? Math.max(...allUsers.map(user => parseInt(user.id))) + 1 
+      : 1;
+      const { data: newUser } = await axios.post('http://localhost:3000/users', {
+        id: newId,
+        firstName,
+        lastName,
+        email,
+        password
+      });
 
-      const { data: users } = await axios.get('http://localhost:3000/users');
-
-      const newId = users.length > 0 ? Math.max(...users.map(user => parseInt(user.id))) + 1 : 1;
-
-      const userWithId = { ...newUser, id: newId };
-
-      const { data } = await axios.post('http://localhost:3000/users', userWithId);
-
-      const updatedUsers = [...existingUsers, userWithId];
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-      dispatch(login(data));
-      localStorage.setItem('currentUser', JSON.stringify(data));
-      navigate('/login');
+      dispatch(login(newUser));
+      navigate('/');
 
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Signup error:', error);
+      setError(error.response?.data?.message || error.message);
     }
   };
 
@@ -76,6 +79,9 @@ const Signup = () => {
         placeholder="Password"
         required
       />
+      
+      {error && <div className="error-message">{error}</div>}
+      
       <button type="submit">Signup</button>
     </form>
   );
