@@ -1,72 +1,88 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
-// const initialState = {
-//   user: JSON.parse(localStorage.getItem('user')) || null, 
-//   status: 'idle', 
-//   error: null,
-// };
-
-export const signupUser  = createAsyncThunk('auth/signupUser ', async (userData) => {
-  const usersResponse = await fetch('http://localhost:3000/users');
-  if (!usersResponse.ok) {
-    throw new Error('Failed to fetch users');
+const getInitialUser  = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user')) || null;
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    localStorage.removeItem('user');
+    return null;
   }
-  
-  const users = await usersResponse.json();
+};
 
-  const newId = users.length > 0 ? Math.max(...users.map(user => parseInt(user.id))) + 1 : 1;
+const initialState = {
+  user: getInitialUser (),
+  status: 'idle',
+  error: null,
+};
 
-  const newUser  = { ...userData, id: newId };
+export const signupUser  = createAsyncThunk(
+  'auth/signupUser ',
+  async (userData, { rejectWithValue }) => {
+    try {
+      
+      const { data: existingUsers } = await axios.get(
+        `http://localhost:3000/users?email=${userData.email}`
+      );
 
-  const response = await fetch('http://localhost:3000/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(newUser ),
-  });
+      if (existingUsers.length > 0) {
+        return rejectWithValue('Email already registered');
+      }
 
-  if (!response.ok) {
-    throw new Error('Failed to sign up user');
+      
+      const { data: allUsers } = await axios.get('http://localhost:3000/users');
+      const newId = allUsers.length > 0 
+        ? Math.max(...allUsers.map(user => parseInt(user.id))) + 1 
+        : 1;
+
+      
+      const { data: newUser  } = await axios.post('http://localhost:3000/users', {
+        ...userData,
+        id: newId
+      });
+
+      return newUser ;
+
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
   }
-
-  const data = await response.json();
-  return data; 
-});
+);
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState:{
-    user: null,
-    status: 'idle',   
-  },
+  initialState,
   reducers: {
     login: (state, action) => {
       state.user = action.payload;
-      localStorage.setItem('user', JSON.stringify(action.payload)); 
+      state.error = null;
+      localStorage.setItem('user', JSON.stringify(action.payload));
     },
     logout: (state) => {
       state.user = null;
-      localStorage.clear(); 
+      state.status = 'idle';
+      state.error = null;
+      localStorage.removeItem('user');
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(signupUser .pending, (state) => {
         state.status = 'loading';
+        state.error = null;
       })
       .addCase(signupUser .fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload; 
-        // localStorage.setItem('user', JSON.stringify(action.payload)); 
+        state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
       .addCase(signupUser .rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message; 
+        state.error = action.payload || 'Signup failed';
       });
   },
 });
 
 export const { login, logout } = authSlice.actions;
-
 export default authSlice.reducer;

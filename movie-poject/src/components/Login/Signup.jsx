@@ -1,9 +1,8 @@
 
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { login } from '../../redux/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { signupUser  } from '../../redux/authSlice';
 import './Signup.css';
 
 const Signup = () => {
@@ -11,79 +10,97 @@ const Signup = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { status, error } = useSelector((state) => state.auth);
 
-  const handleSignup = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
-    try {
-      const { data: existingUsers } = await axios.get(
-        `http://localhost:3000/users?email=${email}`
-      );
+    if (!firstName || !lastName || !email || !password) {
+      setFormError('All fields are required.');
+      return;
+    } else {
+      setFormError(''); 
+    }
 
-      if (existingUsers.length > 0) {
-        throw new Error('Email already registered!');
-      }
-    
-    const { data: allUsers } = await axios.get('http://localhost:3000/users');
-    const newId = allUsers.length > 0 
-      ? Math.max(...allUsers.map(user => parseInt(user.id))) + 1 
-      : 1;
-      const { data: newUser } = await axios.post('http://localhost:3000/users', {
-        id: newId,
-        firstName,
-        lastName,
-        email,
-        password
-      });
+    const userData = {
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      password
+    };
 
-      dispatch(login(newUser));
+    const result = await dispatch(signupUser (userData)); 
+
+    if (signupUser .fulfilled.match(result)) {
       navigate('/');
-
-    } catch (error) {
-      console.error('Signup error:', error);
-      setError(error.response?.data?.message || error.message);
     }
   };
 
   return (
-    <form onSubmit={handleSignup}>
-      <input
-        type="text"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-        placeholder="First Name"
-        required
-      />
-      <input
-        type="text"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-        placeholder="Last Name"
-        required
-      />
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        required
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        required
-      />
-      
-      {error && <div className="error-message">{error}</div>}
-      
-      <button type="submit">Signup</button>
-    </form>
+    <div className="signup-container">
+      <h2>Create Account</h2>
+      <form onSubmit={handleSubmit} className="signup-form">
+        <div className="form-group">
+          <label htmlFor="firstName">First Name</label>
+          <input
+            type="text"
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="lastName">Last Name</label>
+          <input
+            type="text"
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength="6"
+          />
+        </div>
+
+        {formError && <div className="error-message">{formError}</div>}
+        {error && <div className="error-message">{error}</div>}
+
+        <button 
+          type="submit" 
+          className="submit-btn"
+          disabled={status === 'loading'}
+        >
+          {status === 'loading' ? 'Creating Account...' : 'Sign Up'}
+        </button>
+      </form>
+    </div>
   );
 };
 
