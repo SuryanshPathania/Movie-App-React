@@ -28,6 +28,13 @@ h2 {
   letter-spacing: 1px;
 }
 
+h3{
+  margin-left: 150px;
+}
+.login{
+  margin-left: 35%;
+}
+
 /* Input Fields */
 input {
   width: 100%;  /* ✅ Ensures all inputs are equal */

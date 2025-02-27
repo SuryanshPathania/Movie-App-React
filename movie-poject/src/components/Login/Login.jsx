@@ -1,34 +1,24 @@
 
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { login } from '../../redux/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../redux/authSlice';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const state = useSelector()
+  const { error } = useSelector((state) => state.auth);
 
-  const handleLogin = async(e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // const storedUsers = state.auth.user|| [];
-    const response =await axios.get('http://localhost:3000/users');
-    const storedUsers = response.data
-    const matchedUser = storedUsers.find(user => 
-      user.email === email && user.password === password
-    );
-
-    if (matchedUser) {
-      dispatch(login(matchedUser));
-      // localStorage.setItem('currentUser', JSON.stringify(matchedUser));
+    const resultAction = await dispatch(loginUser({ email, password }));
+    if (loginUser.fulfilled.match(resultAction)) {
       navigate('/dashboard');
     } else {
-      alert('Invalid email or password');
+      alert(error);
     }
   };
 
@@ -38,7 +28,8 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className='login'>
+      <h3>Login</h3>
       <form onSubmit={handleLogin}>
         <input
           type="email"
@@ -62,3 +53,4 @@ const Login = () => {
 };
 
 export default Login;
+
